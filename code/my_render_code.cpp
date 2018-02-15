@@ -8,4 +8,14 @@
 
 #include "GL_framework.h"
 
+void myInitCode() {
 
+}
+
+void myRenderCode(double currentTime) {
+
+}
+
+void myCleanupCode() {
+
+}

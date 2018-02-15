@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <cassert>
 
+#include<iostream>
+
 #include "GL_framework.h"
 
 ///////// fw decl
@@ -28,7 +30,15 @@ namespace Cube {
 	void drawCube();
 }
 
+namespace MyFirstShader {	
+	GLuint myShaderCompiler();
+	void myInitCode();
+	void myRenderCode(double currentTime);
+	void myCleanupCopde();
 
+	GLuint myRenderProgram;
+	GLuint myVAO;
+}
 
 
 
@@ -139,7 +149,23 @@ void GLrender(double currentTime) {
 	Axis::drawAxis();
 	Cube::drawCube();*/
 
+	//static const GLfloat red[] = { 1.0f,.0f,.0f,1.0f };
+	//glClearBufferfv(GL_COLOR, 0, red);
 
+	float r = float(cos(currentTime)*.5f+.5f);
+	float g = float(sin(currentTime)*.5f + .5f);
+	float b = float(tan(currentTime)*.5f + .5f);
+	float a = float(cos(currentTime)*.5f + .5f);
+	
+	/*if (r < 0) r = r*-1;
+	if (g < 0) g = g*-1;
+	if (b < 0) b = b*-1;
+	if (a < 0) a = a*-1;*/
+
+	const GLfloat rndColor[] = { r,g,b,a };
+	glClearBufferfv(GL_COLOR, 0, rndColor);
+
+	std::cout <<"R:"<< r << " G:" << g << " B:" << b << " A:" << a << "\n";
 
 	ImGui::Render();
 }
@@ -988,3 +1014,38 @@ void main() {\n\
 
 
 }
+
+////////////////////////////////////////////////// MY FIRST SHADER 8=================D
+namespace MyFirstShader {
+
+	//1. Define the shaders source code
+	static const GLchar* vertex_shader_source[] = 	{
+"#version 330\n\
+\n\
+void main(){\n\
+gl_position = vec4(0.0,0.0,0.5,1.0);\n\
+"
+	};
+
+	//2. Compile and link the shaders
+	GLuint myShaderCompiler() {
+
+	}
+
+	//3. Init function
+	void myInitCode() {
+
+	}
+
+	//4. Render function
+	void myRenderCode(double currentTime){
+
+	}
+
+	//5. Cleanup function
+	void myCleanupCopde() {
+
+	}
+}
+
+
