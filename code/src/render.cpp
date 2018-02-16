@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include<iostream>
+#include<iomanip>
 
 #include "GL_framework.h"
 
@@ -31,7 +32,7 @@ namespace Cube {
 }
 
 namespace MyFirstShader {	
-	GLuint myShaderCompiler();
+	GLuint myShaderCompile();
 	void myInitCode();
 	void myRenderCode(double currentTime);
 	void myCleanupCopde();
@@ -39,9 +40,6 @@ namespace MyFirstShader {
 	GLuint myRenderProgram;
 	GLuint myVAO;
 }
-
-
-
 
 ////////////////
 
@@ -114,15 +112,8 @@ void GLinit(int width, int height) {
 	Axis::setupAxis();
 	Cube::setupCube();*/
 
-
-
-
-
-
-
-
-
-
+	//MyFirstShader::myInitCode();
+	Cube::setupCube();
 }
 
 void GLcleanup() {
@@ -130,8 +121,8 @@ void GLcleanup() {
 	Axis::cleanupAxis();
 	Cube::cleanupCube();
 */
-
-
+	//MyFirstShader::myCleanupCopde();
+	Cube::cleanupCube();
 }
 
 void GLrender(double currentTime) {
@@ -148,24 +139,24 @@ void GLrender(double currentTime) {
 	/*Box::drawCube();
 	Axis::drawAxis();
 	Cube::drawCube();*/
-
-	//static const GLfloat red[] = { 1.0f,.0f,.0f,1.0f };
-	//glClearBufferfv(GL_COLOR, 0, red);
-
+	
+	/*
 	float r = float(cos(currentTime)*.5f+.5f);
 	float g = float(sin(currentTime)*.5f + .5f);
 	float b = float(tan(currentTime)*.5f + .5f);
 	float a = float(cos(currentTime)*.5f + .5f);
-	
-	/*if (r < 0) r = r*-1;
-	if (g < 0) g = g*-1;
-	if (b < 0) b = b*-1;
-	if (a < 0) a = a*-1;*/
 
 	const GLfloat rndColor[] = { r,g,b,a };
 	glClearBufferfv(GL_COLOR, 0, rndColor);
 
 	std::cout <<"R:"<< r << " G:" << g << " B:" << b << " A:" << a << "\n";
+	*/
+
+	RV::panv[0] = sin(currentTime)*10;
+	RV::panv[1] = -cos(currentTime);
+
+	//MyFirstShader::myRenderCode(currentTime);
+	Cube::drawCube();
 
 	ImGui::Render();
 }
@@ -708,6 +699,7 @@ void drawCapsule() {
 }
 
 ////////////////////////////////////////////////// PARTICLES
+
 // Same rendering as Sphere (reusing shaders)
 namespace LilSpheres {
 GLuint particlesVao;
@@ -926,9 +918,6 @@ namespace Cube {
 		16, 17, 18, 19, UCHAR_MAX,
 		20, 21, 22, 23, UCHAR_MAX
 	};
-
-
-
 	
 	const char* cube_vertShader =
 	"#version 330\n\
@@ -953,6 +942,7 @@ uniform vec4 color;\n\
 void main() {\n\
 	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
 }";
+
 	void setupCube() {
 		glGenVertexArrays(1, &cubeVao);
 		glBindVertexArray(cubeVao);
@@ -1018,33 +1008,88 @@ void main() {\n\
 ////////////////////////////////////////////////// MY FIRST SHADER 8=================D
 namespace MyFirstShader {
 
-	//1. Define the shaders source code
-	static const GLchar* vertex_shader_source[] = 	{
+	//1. Define the shader source code
+	static const GLchar* vertex_shader_source[] = {
 "#version 330\n\
 \n\
 void main(){\n\
-gl_position = vec4(0.0,0.0,0.5,1.0);\n\
-"
+	const vec4 vertices[3] = vec4[3](vec4(0.25, -0.25, 0.5, 1.0),\n\
+									vec4(0.25, 0.25, 0.5, 1.0),\n\
+									vec4(-0.25, -0.25, 0.5, 1.0));\n\
+	gl_Position = vertices[gl_VertexID];\n\
+}"
+	};
+
+	static const GLchar * fragment_shader_source[] =
+	{
+"#version 330\n\
+\n\
+out vec4 color;\n\
+\n\
+void main(){\n\
+	color = vec4(0.33,0.66,0.99,1.0);\n\
+}"
 	};
 
 	//2. Compile and link the shaders
-	GLuint myShaderCompiler() {
+	GLuint myShaderCompile() {
+		
+		GLuint vertex_shader;
+		GLuint fragment_shader;
+		GLuint program;
 
+		vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(vertex_shader, 1, vertex_shader_source, NULL);
+		glCompileShader(vertex_shader);
+
+		fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(fragment_shader, 1, fragment_shader_source, NULL);
+		glCompileShader(fragment_shader);
+
+		program = glCreateProgram();
+		glAttachShader(program, vertex_shader);
+		glAttachShader(program, fragment_shader);
+		glLinkProgram(program);
+
+		glDeleteShader(vertex_shader);
+		glDeleteShader(fragment_shader);
+
+		return program;
 	}
 
 	//3. Init function
 	void myInitCode() {
 
+		myRenderProgram = myShaderCompile();
+		glCreateVertexArrays(1, &myVAO);
+		glBindVertexArray(myVAO);
 	}
 
 	//4. Render function
 	void myRenderCode(double currentTime){
 
+		float r = float(cos(currentTime)*.5f + .5f);
+		float g = float(sin(currentTime)*.5f + .5f);
+		float b = float(cos(currentTime)*.5f + .5f);
+		float a = float(cos(currentTime)*.5f + .5f);
+
+		const GLfloat rndColor[] = { r,g,b,a };
+		glClearBufferfv(GL_COLOR, 0, rndColor);
+
+		std::cout << "Red:" << std::setprecision(3) << std::fixed << r << " Green:" << g << " Blue:" << b << " Alpha:" << a << "\n";
+
+		glUseProgram(myRenderProgram);
+
+		glPointSize(40.0f);		//Cada Vertex el pinta en 40 pixels
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
 	//5. Cleanup function
 	void myCleanupCopde() {
 
+		glDeleteVertexArrays(1, &myVAO);
+		glDeleteProgram(myRenderProgram);
 	}
 }
 
