@@ -29,6 +29,7 @@ namespace Cube {
 	void cleanupCube();
 	void updateCube(const glm::mat4& transform);
 	void drawCube();
+	void draw2Cubes(double currentTime);
 }
 
 namespace MyFirstShader {	
@@ -108,19 +109,17 @@ void GLinit(int width, int height) {
 	RV::_projection = glm::perspective(RV::FOV, (float)width/(float)height, RV::zNear, RV::zFar);
 
 	// Setup shaders & geometry
-	/*Box::setupCube();
+	Box::setupCube();
 	Axis::setupAxis();
-	Cube::setupCube();*/
 
 	//MyFirstShader::myInitCode();
 	Cube::setupCube();
 }
 
 void GLcleanup() {
-	/*Box::cleanupCube();
+	Box::cleanupCube();
 	Axis::cleanupAxis();
-	Cube::cleanupCube();
-*/
+
 	//MyFirstShader::myCleanupCopde();
 	Cube::cleanupCube();
 }
@@ -136,27 +135,17 @@ void GLrender(double currentTime) {
 	RV::_MVP = RV::_projection * RV::_modelView;
 
 	// render code
-	/*Box::drawCube();
-	Axis::drawAxis();
-	Cube::drawCube();*/
-	
-	/*
-	float r = float(cos(currentTime)*.5f+.5f);
-	float g = float(sin(currentTime)*.5f + .5f);
-	float b = float(tan(currentTime)*.5f + .5f);
-	float a = float(cos(currentTime)*.5f + .5f);
+	Box::drawCube();
+	Axis::drawAxis();	
 
-	const GLfloat rndColor[] = { r,g,b,a };
-	glClearBufferfv(GL_COLOR, 0, rndColor);
-
-	std::cout <<"R:"<< r << " G:" << g << " B:" << b << " A:" << a << "\n";
-	*/
-
-	RV::panv[0] = sin(currentTime)*10;
-	RV::panv[1] = -cos(currentTime);
+	//Movimeinto de Camara Aleatorio
+	//RV::panv[0] = sin(currentTime)*10;
+	//RV::panv[1] = -cos(currentTime);
 
 	//MyFirstShader::myRenderCode(currentTime);
-	Cube::drawCube();
+
+	//Cube::drawCube();
+	Cube::draw2Cubes(currentTime);
 
 	ImGui::Render();
 }
@@ -863,6 +852,7 @@ namespace Cube {
 	GLuint cubeShaders[2];
 	GLuint cubeProgram;
 	glm::mat4 objMat = glm::mat4(1.f);
+	glm::mat4 objMat2Cubes = glm::mat4(1.f);
 
 	extern const float halfW = 0.5f;
 	int numVerts = 24 + 6; // 4 vertex/face * 6 faces + 6 PRIMITIVE RESTART
@@ -1001,7 +991,37 @@ void main() {\n\
 		glBindVertexArray(0);
 		glDisable(GL_PRIMITIVE_RESTART);
 	}
+	void draw2Cubes(double currentTime) {
+		glEnable(GL_PRIMITIVE_RESTART);
+		glBindVertexArray(cubeVao);
+		glUseProgram(cubeProgram);
 
+		glm::mat4 translacio = glm::translate(glm::mat4(), glm::vec3(1.f, 4.f, 0.f));
+		glm::mat4 translacio2 = glm::translate(glm::mat4(), glm::vec3(1.f, 0.f, 0.f));
+		objMat = translacio;
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 1.f, 0.f, 0.f, 0.f);
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+		glm::mat4 escalar = glm::scale(glm::mat4(), glm::vec3(cos(currentTime)*.5f+1.5f, cos(currentTime)*.5f + 1.5f, cos(currentTime)*.5f + 1.5f));
+
+		glm::mat4 rotacio = glm::rotate(glm::mat4(), float(currentTime)*10 ,glm::vec3(0.f, 1.f, 0.f));
+
+		translacio = glm::translate(glm::mat4(), glm::vec3(2.f, cos(currentTime)*.5f + 4.5f, 0.f));
+
+		objMat =translacio2 * rotacio * translacio * rotacio * escalar;
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), cos(currentTime)*.5f+.5f, 0.f, 1.f, 1.f);
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+		glUseProgram(0);
+		glBindVertexArray(0);
+		glDisable(GL_PRIMITIVE_RESTART);
+	}
 
 }
 
