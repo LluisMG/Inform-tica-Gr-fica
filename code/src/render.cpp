@@ -1006,7 +1006,7 @@ void main() {\n\
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 1.f, 0.f, 0.f, 0.f);
 		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
 
-		//Exercici
+		//Exe
 
 		glm::mat4 escalar = glm::scale(glm::mat4(), glm::vec3(cos(currentTime)*.5f+1.5f, cos(currentTime)*.5f + 1.5f, cos(currentTime)*.5f + 1.5f));
 
