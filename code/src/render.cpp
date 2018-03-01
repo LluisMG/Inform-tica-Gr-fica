@@ -1022,7 +1022,6 @@ void main() {\n\
 		glBindVertexArray(0);
 		glDisable(GL_PRIMITIVE_RESTART);
 
-		//hola
 	}
 
 }
