@@ -1006,6 +1006,8 @@ void main() {\n\
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 1.f, 0.f, 0.f, 0.f);
 		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
 
+		//Exercici
+
 		glm::mat4 escalar = glm::scale(glm::mat4(), glm::vec3(cos(currentTime)*.5f+1.5f, cos(currentTime)*.5f + 1.5f, cos(currentTime)*.5f + 1.5f));
 
 		glm::mat4 rotacio = glm::rotate(glm::mat4(), float(currentTime)*10 ,glm::vec3(0.f, 1.f, 0.f));
