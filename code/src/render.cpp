@@ -9,6 +9,9 @@
 
 #include "GL_framework.h"
 
+//Variable per moure en l'eix X en l'ejercici
+float move = 0.f;
+
 ///////// fw decl
 namespace ImGui {
 	void Render();
@@ -106,7 +109,12 @@ void GLinit(int width, int height) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
+	//Gamara en Perspectiva
 	RV::_projection = glm::perspective(RV::FOV, (float)width/(float)height, RV::zNear, RV::zFar);
+
+	//Camara Ortogonal
+	//float scale = 100.f;
+	//RV::_projection = glm::ortho(-(float)width/scale,(float)width/scale, -(float)height/scale,(float)height/scale, RV::zNear, RV::zFar);
 
 	// Setup shaders & geometry
 	Box::setupCube();
@@ -132,6 +140,8 @@ void GLrender(double currentTime) {
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[0], glm::vec3(0.f, 1.f, 0.f));
 
+	RV::_modelView = glm::lookAt(glm::vec3(-3.f,5.f,15.f), glm::vec3(move, 1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
 	RV::_MVP = RV::_projection * RV::_modelView;
 
 	// render code
@@ -141,6 +151,9 @@ void GLrender(double currentTime) {
 	//Movimeinto de Camara Aleatorio
 	//RV::panv[0] = sin(currentTime)*10;
 	//RV::panv[1] = -cos(currentTime);
+
+	//Moure la camara en l'eix X
+	//RV::panv[0] = -move;
 
 	//MyFirstShader::myRenderCode(currentTime);
 
@@ -996,8 +1009,15 @@ void main() {\n\
 		glBindVertexArray(cubeVao);
 		glUseProgram(cubeProgram);
 
-		glm::mat4 translacio = glm::translate(glm::mat4(), glm::vec3(1.f, 4.f, 0.f));
-		glm::mat4 translacio2 = glm::translate(glm::mat4(), glm::vec3(1.f, 0.f, 0.f));
+		//Moure el Cub en l'eix X
+		move += .1f;
+		if (move > 5.f) {
+			move -= 5.f;
+		}
+		
+
+		glm::mat4 translacio = glm::translate(glm::mat4(), glm::vec3(move, 4.f, 0.f));
+		glm::mat4 translacio2 = glm::translate(glm::mat4(), glm::vec3(move, 0.f, 0.f));
 		objMat = translacio;
 
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
@@ -1006,15 +1026,11 @@ void main() {\n\
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 1.f, 0.f, 0.f, 0.f);
 		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
 
-		//Exe
-
 		glm::mat4 escalar = glm::scale(glm::mat4(), glm::vec3(cos(currentTime)*.5f+1.5f, cos(currentTime)*.5f + 1.5f, cos(currentTime)*.5f + 1.5f));
-
 		glm::mat4 rotacio = glm::rotate(glm::mat4(), float(currentTime)*10 ,glm::vec3(0.f, 1.f, 0.f));
-
 		translacio = glm::translate(glm::mat4(), glm::vec3(2.f, cos(currentTime)*.5f + 4.5f, 0.f));
 
-		objMat =translacio2 * rotacio * translacio * rotacio * escalar;
+		objMat = translacio * rotacio * translacio2 * rotacio * escalar;
 
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), cos(currentTime)*.5f+.5f, 0.f, 1.f, 1.f);
