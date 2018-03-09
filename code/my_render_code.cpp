@@ -1,6 +1,8 @@
 #include <GL\glew.h>
 #include <glm\gtc\type_ptr.hpp>
 #include <glm\gtc\matrix_transform.hpp>
+#include <imgui\imgui.h>
+#include <imgui\imgui_impl_sdl_gl3.h>
 
 #include <cstdio>
 #include <cassert>
@@ -24,6 +26,8 @@
 float movement = 0.f;
 int exercici = 1;
 
+int _width, _height;
+
 namespace ImGui {
 	void Render();
 }
@@ -46,7 +50,7 @@ namespace Cube {
 	void myDraw2Cubes(double currentTime);
 }
 namespace RenderVars {
-	const float FOV = glm::radians(65.f);
+	float FOV = glm::radians(65.f);
 	const float zNear = 1.f;
 	const float zFar = 50.f;
 
@@ -82,7 +86,11 @@ void myInitCode(int width, int height) {
 	if (exercici == 1) {
 		float scale = 100.f;
 		RV::my_projection = glm::ortho(-(float)width/scale,(float)width/scale, -(float)height/scale,(float)height/scale, RV::zNear, RV::zFar);
+	} else {
+		RV::my_projection = glm::perspective(RV::FOV, (float)width / (float)height, RV::zNear, RV::zFar);
 	}
+	_width = width;
+	_height = height;
 
 	// Setup shaders & geometry
 	Box::mySetupCube();
@@ -109,18 +117,52 @@ void myRenderCode(double currentTime) {
 	//RV::panv[0] = sin(currentTime)*10;
 	//RV::panv[1] = -cos(currentTime);
 
-	//Moure la camara en l'eix X
-	movement += .1f;
-	if (movement > 10.f) {
-		movement -= 10.f;
+	if (exercici == 1) {
+		//Moure la camara en l'eix X
+		movement += .1f;
+		if (movement > 10.f) {
+			movement -= 10.f;
+		}
 	}
-
+	
 	RV::myPanv[0] = movement;
 
 	//MyFirstShader::myRenderCode(currentTime);
 
 	//Cube::drawCube();
 	Cube::myDraw2Cubes(currentTime);
+
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.WantCaptureKeyboard) {
+		if (ImGui::IsKeyDown('1')) {
+			exercici = 1;
+			movement = 0;
+			myInitCode(_width, _height);
+		}
+		if (ImGui::IsKeyDown('2')) {
+			exercici = 2;
+			movement = 0;
+			myInitCode(_width, _height);
+		}
+		if (ImGui::IsKeyDown('3')) {
+
+		}
+
+		if (exercici == 2 && ImGui::IsKeyDown('z')) { //Zoom in
+			RV::myPanv[2]++;
+		}
+		if (exercici == 2 && ImGui::IsKeyDown('x')) { //Zoom out
+			RV::myPanv[2]--;
+		}
+		if (exercici == 2 && ImGui::IsKeyDown('f')) { //FOV ++
+			RV::FOV += glm::radians(1.f);;
+			RV::my_projection = glm::perspective(RV::FOV, (float)_width / (float)_height, RV::zNear, RV::zFar);
+		}
+		if (exercici == 2 && ImGui::IsKeyDown('g')) { //FOV --
+			RV::FOV -= glm::radians(1.f);;
+			RV::my_projection = glm::perspective(RV::FOV, (float)_width / (float)_height, RV::zNear, RV::zFar);
+		}
+	}
 
 	ImGui::Render();
 }
@@ -543,7 +585,7 @@ void main() {\n\
 
 			//CUB FORA DE PANTALLA
 			glm::mat4 translacio_cub4 = glm::translate(glm::mat4(), glm::vec3(-3.0f, 1.f, 0.0f));
-			glm::mat4 escalar_cub4 = glm::scale(glm::mat4(), glm::vec3(3.0f, float(currentTime) / 5, 2.0f));
+			glm::mat4 escalar_cub4 = glm::scale(glm::mat4(), glm::vec3(3.0f, float(movement) / 5, 2.0f));
 			myObjMat = escalar_cub4 * translacio_cub4;
 
 			glUniformMatrix4fv(glGetUniformLocation(myCubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(myObjMat));
